@@ -7,8 +7,8 @@ VM_NAME="k3s-demo"
 
 echo ">>> Launching LXD VM ($VM_NAME)..."
 lxc launch ubuntu:22.04 $VM_NAME --vm \
-  -c limits.cpu=2 \
-  -c limits.memory=4GB
+  -c limits.cpu=4 \
+  -c limits.memory=12GB
 
 echo ">>> Waiting for LXD agent to be ready inside the VM (this takes a moment)..."
 while ! lxc exec $VM_NAME -- true 2>/dev/null; do
