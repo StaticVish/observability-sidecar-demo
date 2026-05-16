@@ -21,7 +21,11 @@ echo ">>> Launching Multipass VM ($INSTANCE_NAME)..."
 if multipass info $INSTANCE_NAME >/dev/null 2>&1; then
     echo "Instance $INSTANCE_NAME already exists. Skipping creation."
 else
-    multipass launch --name $INSTANCE_NAME --cpus $CPUS --memory $MEM --disk $DISK --cloud-init cloud-init.yaml
+    # Multipass runs via Snap which strictly limits file access. 
+    # It cannot read files from /Works. Temporarily copying to $HOME.
+    cp cloud-init.yaml $HOME/.k3s-cloud-init.yaml
+    multipass launch --name $INSTANCE_NAME --cpus $CPUS --memory $MEM --disk $DISK --cloud-init $HOME/.k3s-cloud-init.yaml
+    rm -f $HOME/.k3s-cloud-init.yaml
 fi
 
 echo ">>> Waiting for K3s to be ready..."
