@@ -55,3 +55,6 @@ To completely remove the cluster and clean up resources:
 ```bash
 ./setup-multipass-k3s.sh --uninstall
 ```
+
+### Phase 1 Findings (Baseline)
+Running the baseline application, we can easily query infrastructure metrics (like `sum(rate(container_cpu_usage_seconds_total{namespace="sock-shop"}[1m])) by (pod)`) via Prometheus. However, we have **zero visibility** into the application layer. We cannot see HTTP request rates, 5xx error rates, latency histograms, or distributed traces. We are flying blind at L7.
