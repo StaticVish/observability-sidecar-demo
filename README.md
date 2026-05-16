@@ -1,29 +1,57 @@
-# Observability Sidecar Demo: Weaveworks + LXD K3s
+# Observability Sidecar Demo: The Evolution of a Legacy App
 
-This project sets up a throwaway K3s environment using **LXC/LXD** to demonstrate how to instrument legacy microservices (Weaveworks Sock Shop) with modern observability using sidecar proxies (HAProxy and Envoy) without changing the application code.
+This project demonstrates the modernization of a legacy microservices application by incrementally introducing observability through sidecar proxies. We use the **Weaveworks Sock Shop** as our baseline "legacy" application and progressively inject different sidecars to observe the evolution of network metrics, tracing, and visibility without altering the application code.
 
-## Phase 1: Infrastructure Setup
-Run the bash script on your LXD-enabled hardware to spin up the K3s container. It automatically handles the necessary container privileges (`security.nesting`, `security.privileged`) required to run Docker/K3s inside LXC.
+## The Narrative and Stages
 
+We explore four distinct phases of observability:
+
+1. **Phase 1: The Baseline (Legacy)**
+   - **Architecture:** Raw microservices communicating directly.
+   - **Observability:** Basic node-level and pod-level metrics (CPU, Memory). No visibility into L7 traffic or distributed tracing.
+2. **Phase 2: HAProxy**
+   - **Architecture:** Injecting HAProxy as a sidecar for basic traffic routing and load balancing.
+   - **Observability:** Introduction of basic L4/L7 traffic metrics (request rates, error rates).
+3. **Phase 3: Caddy 2**
+   - **Architecture:** Swapping to Caddy 2 as a modern web server/proxy sidecar.
+   - **Observability:** Enhanced metrics and easier configuration.
+4. **Phase 4: Envoy (Cloud-Native)**
+   - **Architecture:** Injecting Envoy, the industry standard cloud-native proxy.
+   - **Observability:** Full distributed tracing (Tempo), rich L7 metrics, and deep network observability via the OpenTelemetry Collector.
+
+## Infrastructure
+
+- **Environment:** Ubuntu Multipass VM (4 vCPU, 12GB RAM)
+- **Kubernetes:** K3s (Lightweight Kubernetes)
+- **Observability Stack:**
+  - Prometheus (Metrics)
+  - Grafana (Dashboards)
+  - Tempo (Distributed Tracing)
+  - OpenTelemetry (OTEL) Collector (Telemetry Pipeline)
+
+## Setup Instructions
+
+1. **Bootstrap the Cluster:**
+   ```bash
+   ./setup-multipass-k3s.sh
+   export KUBECONFIG=$(pwd)/kubeconfig.yaml
+   ```
+2. **Deploy the Observability Stack:**
+   ```bash
+   ./deploy-observability.sh
+   ```
+3. **Deploy the Baseline Application:**
+   ```bash
+   kubectl create namespace sock-shop
+   kubectl apply -f manifests/base/sock-shop.yaml -n sock-shop
+   ```
+4. **Run Load Test:**
+   ```bash
+   kubectl apply -f manifests/base/load-generator.yaml
+   ```
+
+## Teardown
+To completely remove the cluster and clean up resources:
 ```bash
-chmod +x setup-lxd-k3s.sh
-./setup-lxd-k3s.sh
-```
-
-Once the script finishes, it will drop a `kubeconfig.yaml` in this directory. Export it to your local shell:
-```bash
-export KUBECONFIG=$PWD/kubeconfig.yaml
-kubectl get nodes
-```
-
-## Next Phases
-- **Phase 2:** Deploy Weaveworks Sock Shop legacy manifests.
-- **Phase 3:** Inject HAProxy Sidecar for basic metrics/logging.
-- **Phase 4:** Migrate to Envoy Sidecar for advanced OpenTelemetry tracing.
-
-## Cleanup
-When you are done testing, tear down the throwaway infrastructure:
-```bash
-lxc delete k3s-demo --force
-rm kubeconfig.yaml
+./setup-multipass-k3s.sh --uninstall
 ```
