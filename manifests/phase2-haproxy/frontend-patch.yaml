@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: front-end
+  namespace: sock-shop
+spec:
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8404"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: haproxy-sidecar
+        image: haproxy:2.8
+        ports:
+        - containerPort: 8080
+          name: http-proxy
+        - containerPort: 8404
+          name: metrics
+        volumeMounts:
+        - name: haproxy-config-vol
+          mountPath: /usr/local/etc/haproxy/haproxy.cfg
+          subPath: haproxy.cfg
+      volumes:
+      - name: haproxy-config-vol
+        configMap:
+          name: haproxy-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: front-end
+  namespace: sock-shop
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30001
