@@ -1,0 +1,47 @@
+mode: deployment
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+  exporters:
+    prometheus:
+      endpoint: 0.0.0.0:8889
+      send_timestamps: true
+    otlp:
+      endpoint: tempo.observability.svc.cluster.local:4317
+      tls:
+        insecure: true
+  service:
+    pipelines:
+      traces:
+        receivers: [otlp]
+        exporters: [otlp]
+      metrics:
+        receivers: [otlp]
+        exporters: [prometheus]
+
+ports:
+  otlp:
+    enabled: true
+    containerPort: 4317
+    servicePort: 4317
+    protocol: TCP
+  otlp-http:
+    enabled: true
+    containerPort: 4318
+    servicePort: 4318
+    protocol: TCP
+  metrics:
+    enabled: true
+    containerPort: 8889
+    servicePort: 8889
+    protocol: TCP
+
+# Add annotations so Prometheus automatically scrapes the OTEL Collector for its translated metrics
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8889"
