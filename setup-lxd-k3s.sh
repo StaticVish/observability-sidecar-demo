@@ -8,7 +8,8 @@ echo ">>> Launching LXD container ($CONTAINER_NAME)..."
 lxc launch ubuntu:22.04 $CONTAINER_NAME \
   -c security.nesting=true \
   -c security.privileged=true \
-  -c raw.lxc="lxc.apparmor.profile=unconfined"
+  -c linux.kernel_modules="overlay,br_netfilter,ip_tables,ip6_tables,netlink_diag,nf_nat,macvlan" \
+  -c raw.lxc="lxc.apparmor.profile=unconfined\nlxc.cgroup.devices.allow=a\nlxc.cap.drop="
 
 echo ">>> Waiting for container to get an IPv4 address..."
 sleep 5
