@@ -58,3 +58,6 @@ To completely remove the cluster and clean up resources:
 
 ### Phase 1 Findings (Baseline)
 Running the baseline application, we can easily query infrastructure metrics (like `sum(rate(container_cpu_usage_seconds_total{namespace="sock-shop"}[1m])) by (pod)`) via Prometheus. However, we have **zero visibility** into the application layer. We cannot see HTTP request rates, 5xx error rates, latency histograms, or distributed traces. We are flying blind at L7.
+
+### Phase 2 Findings (HAProxy)
+By patching the `front-end` service to include an HAProxy sidecar and intercepting all traffic to port `8080`, we immediately unlocked L7 metrics (`haproxy_frontend_http_requests_total`). Using the Prometheus `sum(rate(...[1m])) by (proxy)` query, we could visualize a clear per-second HTTP request rate, giving us critical visibility without modifying the application source code.
