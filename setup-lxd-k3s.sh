@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+export PATH=$PATH:/snap/bin
+
 VM_NAME="k3s-demo"
 
 echo ">>> Launching LXD VM ($VM_NAME)..."
