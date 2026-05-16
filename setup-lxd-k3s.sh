@@ -5,7 +5,7 @@ CONTAINER_NAME="k3s-demo"
 
 echo ">>> Launching LXD container ($CONTAINER_NAME)..."
 # Using nesting, privileged, and unconfined apparmor for smooth K3s execution in LXC
-lxc launch images:ubuntu/22.04 $CONTAINER_NAME \
+lxc launch ubuntu:22.04 $CONTAINER_NAME \
   -c security.nesting=true \
   -c security.privileged=true \
   -c raw.lxc="lxc.apparmor.profile=unconfined"
