@@ -6,7 +6,7 @@ export PATH=$PATH:/snap/bin
 VM_NAME="k3s-demo"
 
 echo ">>> Launching LXD VM ($VM_NAME)..."
-lxc launch ubuntu:22.04 $VM_NAME --vm \
+lxc launch ubuntu:22.04 $VM_NAME --vm -s k3s-pool \
   -c limits.cpu=4 \
   -c limits.memory=12GB
 
