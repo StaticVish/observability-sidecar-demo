@@ -42,8 +42,7 @@ We explore four distinct phases of observability:
    ```
 3. **Deploy the Baseline Application:**
    ```bash
-   kubectl create namespace sock-shop
-   kubectl apply -f manifests/base/sock-shop.yaml -n sock-shop
+   kubectl apply -k manifests/base
    ```
 4. **Run Load Test:**
    ```bash
@@ -61,3 +60,9 @@ Running the baseline application, we can easily query infrastructure metrics (li
 
 ### Phase 2 Findings (HAProxy)
 By patching the `front-end` service to include an HAProxy sidecar and intercepting all traffic to port `8080`, we immediately unlocked L7 metrics (`haproxy_frontend_http_requests_total`). Using the Prometheus `sum(rate(...[1m])) by (proxy)` query, we could visualize a clear per-second HTTP request rate, giving us critical visibility without modifying the application source code.
+
+### Phase 3 Findings (Caddy 2)
+By swapping HAProxy for Caddy, we simplified our configuration down to a 6-line `Caddyfile`. Traffic was successfully tracked during our load test, yielding Prometheus metrics like `caddy_http_request_duration_seconds_count`. Caddy proved to be an excellent, lightweight option for basic HTTP telemetry.
+
+### Phase 4 Findings (Envoy and Tempo)
+The ultimate goal was distributed tracing. We injected Envoy into the `front-end` pods to natively intercept traffic. Envoy routed `ingress_http` listener stats to Prometheus and pushed gRPC traces to the OTEL Collector, which forwarded them to Tempo. This gave us the exact `traceID` and duration for every request traversing the cluster, providing total visibility to pinpoint latency bottlenecks—all with zero application code changes.
