@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: front-end
+  namespace: sock-shop
+spec:
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "2019"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: caddy-sidecar
+        image: caddy:2.7.6-alpine
+        ports:
+        - containerPort: 8080
+          name: http-proxy
+        - containerPort: 2019
+          name: metrics
+        volumeMounts:
+        - name: caddy-config-vol
+          mountPath: /etc/caddy/Caddyfile
+          subPath: Caddyfile
+      volumes:
+      - name: caddy-config-vol
+        configMap:
+          name: caddy-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: front-end
+  namespace: sock-shop
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30001

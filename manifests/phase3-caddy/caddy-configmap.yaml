@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: caddy-config
+  namespace: sock-shop
+data:
+  Caddyfile: |
+    {
+        # Bind the admin API (which hosts /metrics) to all interfaces
+        admin 0.0.0.0:2019
+    }
+
+    :8080 {
+        # Proxy traffic to the legacy node.js frontend app
+        reverse_proxy 127.0.0.1:8079
+    }
