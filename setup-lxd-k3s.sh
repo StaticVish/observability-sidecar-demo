@@ -3,7 +3,7 @@ set -e
 
 export PATH=$PATH:/snap/bin
 
-VM_NAME="k3s-demo"
+VM_NAME="k3s-cluster"
 
 echo ">>> Launching LXD VM ($VM_NAME)..."
 lxc launch ubuntu:22.04 $VM_NAME --vm \
