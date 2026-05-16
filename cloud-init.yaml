@@ -1,0 +1,9 @@
+# cloud-config
+package_update: true
+packages:
+  - curl
+runcmd:
+  - curl -sfL https://get.k3s.io | sh -
+  - mkdir -p /home/ubuntu/.kube
+  - cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config
+  - chown ubuntu:ubuntu /home/ubuntu/.kube/config
