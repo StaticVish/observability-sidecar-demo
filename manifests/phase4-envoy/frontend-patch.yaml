@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: front-end
+  namespace: sock-shop
+spec:
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9901"
+        prometheus.io/path: "/stats/prometheus"
+    spec:
+      containers:
+      - name: envoy-sidecar
+        image: envoyproxy/envoy:v1.28.0
+        ports:
+        - containerPort: 8080
+          name: http-proxy
+        - containerPort: 9901
+          name: metrics
+        volumeMounts:
+        - name: envoy-config-vol
+          mountPath: /etc/envoy/envoy.yaml
+          subPath: envoy.yaml
+      volumes:
+      - name: envoy-config-vol
+        configMap:
+          name: envoy-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: front-end
+  namespace: sock-shop
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30001

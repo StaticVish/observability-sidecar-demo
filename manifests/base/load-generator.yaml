@@ -4,17 +4,14 @@ metadata:
   name: load-generator
   namespace: sock-shop
 spec:
-  activeDeadlineSeconds: 300 # Run for exactly 5 minutes
+  activeDeadlineSeconds: 300
   template:
     spec:
       containers:
       - name: hey
-        image: williamyeh/hey
+        image: alpine
         command:
-        - "hey"
-        - "-z"
-        - "5m"
+        - "/bin/sh"
         - "-c"
-        - "10"
-        - "http://front-end.sock-shop.svc.cluster.local/"
+        - "apk add --no-cache curl && while true; do curl -s http://front-end.sock-shop.svc.cluster.local/ > /dev/null; sleep 0.1; done"
       restartPolicy: Never
