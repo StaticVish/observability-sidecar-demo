@@ -5,6 +5,14 @@ export PATH=$PATH:/snap/bin
 
 VM_NAME="k3s-cluster"
 
+if [ "$1" == "--uninstall" ]; then
+    echo ">>> Wiping everything for $VM_NAME..."
+    lxc delete $VM_NAME --force 2>/dev/null || true
+    rm -f kubeconfig.yaml
+    echo ">>> Cleanup complete."
+    exit 0
+fi
+
 echo ">>> Launching LXD VM ($VM_NAME)..."
 lxc launch ubuntu:22.04 $VM_NAME --vm \
   -c limits.cpu=4 \
