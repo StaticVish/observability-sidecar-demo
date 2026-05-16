@@ -1,36 +1,37 @@
 #!/bin/bash
 set -e
 
-CONTAINER_NAME="k3s-demo"
+VM_NAME="k3s-demo"
 
-echo ">>> Launching LXD container ($CONTAINER_NAME)..."
-# Using nesting, privileged, and unconfined apparmor for smooth K3s execution in LXC
-lxc launch ubuntu:22.04 $CONTAINER_NAME \
-  -c security.nesting=true \
-  -c security.privileged=true \
-  -c linux.kernel_modules="overlay,br_netfilter,ip_tables,ip6_tables,netlink_diag,nf_nat,macvlan" \
-  -c raw.lxc="lxc.apparmor.profile=unconfined\nlxc.cgroup.devices.allow=a\nlxc.cap.drop="
+echo ">>> Launching LXD VM ($VM_NAME)..."
+lxc launch ubuntu:22.04 $VM_NAME --vm \
+  -c limits.cpu=2 \
+  -c limits.memory=4GB
 
-echo ">>> Waiting for container to get an IPv4 address..."
-sleep 5
-while [ -z "$(lxc list $CONTAINER_NAME -c 4 --format csv | awk '{print $1}')" ]; do
+echo ">>> Waiting for LXD agent to be ready inside the VM (this takes a moment)..."
+while ! lxc exec $VM_NAME -- true 2>/dev/null; do
     sleep 2
 done
 
-IP_ADDR=$(lxc list $CONTAINER_NAME -c 4 --format csv | awk '{print $1}')
-echo ">>> Container IP: $IP_ADDR"
+echo ">>> Waiting for VM to acquire an IPv4 address..."
+while [ -z "$(lxc list $VM_NAME -c 4 --format csv | awk '{print $1}')" ]; do
+    sleep 2
+done
 
-echo ">>> Installing K3s inside the container..."
-lxc exec $CONTAINER_NAME -- sh -c "curl -sfL https://get.k3s.io | sh -"
+IP_ADDR=$(lxc list $VM_NAME -c 4 --format csv | awk '{print $1}')
+echo ">>> VM IP: $IP_ADDR"
+
+echo ">>> Installing K3s inside the VM..."
+lxc exec $VM_NAME -- sh -c "curl -sfL https://get.k3s.io | sh -"
 
 echo ">>> Waiting for K3s to be ready..."
 sleep 15
-lxc exec $CONTAINER_NAME -- sh -c "k3s kubectl wait --for=condition=Ready nodes --all --timeout=120s"
+lxc exec $VM_NAME -- sh -c "k3s kubectl wait --for=condition=Ready nodes --all --timeout=120s"
 
 echo ">>> Extracting kubeconfig to local directory..."
-lxc exec $CONTAINER_NAME -- cat /etc/rancher/k3s/k3s.yaml > kubeconfig.yaml
+lxc exec $VM_NAME -- cat /etc/rancher/k3s/k3s.yaml > kubeconfig.yaml
 
-# Replace localhost with the container's routable IP
+# Replace localhost with the VM's routable IP
 sed -i "s/127.0.0.1/$IP_ADDR/g" kubeconfig.yaml
 chmod 600 kubeconfig.yaml
 
